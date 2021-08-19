@@ -1,0 +1,9 @@
+name: AntiProxy
+main: ml.thelt.antiproxy.Main
+version: 0.0.1-alpha-testing
+description: Prevent Players connecting to server with Proxies/VPN
+author: TheLT
+commands:
+  ap:
+    description: AntiProxy plugin commands
+    aliases: ["antiproxy","antivpn"]
