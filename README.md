@@ -1,4 +1,5 @@
 # AntiProxy
+Main Developer: TheLT
 Prevent players from connecting to server with Proxy/VPN. Initially to be used by Thicc SMP.
 Now with async checks, SQL Database support and more!
 
