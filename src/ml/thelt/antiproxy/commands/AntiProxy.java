@@ -3,7 +3,6 @@ package ml.thelt.antiproxy.commands;
 import ml.thelt.antiproxy.Main;
 import ml.thelt.antiproxy.lib.*;
 import ml.thelt.antiproxy.sql.DatabaseHandler;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

@@ -28,27 +28,22 @@ public class PlayerJoin implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event)
     {
         if (plugin.getConfig().getBoolean("enable")) {
-            // Get event player and player's IP
-            Player p = event.getPlayer();
-            String ip = p.getAddress().getHostString();
+            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+                // Get event player and player's IP
+                Player p = event.getPlayer();
+                String ip = p.getAddress().getHostString();
 
-            // Check if IP is localhost
-            if (ip.equals("127.0.0.1")) {
-                String location = "Localhost";
-                String operation = plugin.getConfig().getString("messages.staffnotify.connected");
-                String status = plugin.getConfig().getString("messages.staffnotify.good");
-                notifyStaff(p, ip, location, operation, status, "localhost");
-                return;
-            }
+                // Check if IP is localhost
+                if (ip.equals("127.0.0.1")) {
+                    String location = "Localhost";
+                    String operation = plugin.getConfig().getString("messages.staffnotify.connected");
+                    String status = plugin.getConfig().getString("messages.staffnotify.good");
+                    notifyStaff(p, ip, location, operation, status, "localhost");
+                    return;
+                }
 
-            // Get Player's location - ip-api.com
-            String[] location = new String[3];
-            IPapi.get(ip, result -> {
-                location[0] = result[0];
-                location[1] = result[1];
-                location[2] = result[2];
-
-                // Check if player is an admin
+                // Get Player's location - ip-api.com
+                String[] location = IPapi.get(ip);
                 if (p.hasPermission("antiproxy.admin") || p.isOp()) {
                     String operation = plugin.getConfig().getString("messages.staffnotify.connected");
                     String status = plugin.getConfig().getString("messages.staffnotify.good");
@@ -57,63 +52,57 @@ public class PlayerJoin implements Listener {
                 }
 
                 // Get database
-                plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                    DatabaseHandler.GetInternetProtocol dbip;
-                    try {
-                        dbip = db.getIP(ip);
-                    } catch (SQLException e) {
-                        System.out.println(Util.chat("&cError while getting data from database!"));
-                        e.printStackTrace();
-                        return;
-                    }
+                DatabaseHandler.GetInternetProtocol dbip;
+                try {
+                    dbip = db.getIP(ip);
+                } catch (SQLException e) {
+                    System.out.println(Util.chat("&cError while getting data from database!"));
+                    e.printStackTrace();
+                    return;
+                }
 
-                    if (dbip != null) {
-                        Boolean ip_status = dbip.status;
-                        String proxy_type = dbip.proxy_type;
-                        if (ip_status) {
-                            String operation = plugin.getConfig().getString("messages.staffnotify.connected");
-                            String status = plugin.getConfig().getString("messages.staffnotify.good");
+                if (dbip != null) {
+                    Boolean ip_status = dbip.status;
+                    String proxy_type = dbip.proxy_type;
+                    if (ip_status) {
+                        String operation = plugin.getConfig().getString("messages.staffnotify.connected");
+                        String status = plugin.getConfig().getString("messages.staffnotify.good");
+                        notifyStaff(p, ip, String.join(", ", location), operation, status, proxy_type);
+                    } else {
+                        String operation = plugin.getConfig().getString("messages.staffnotify.kicked");
+                        String status = plugin.getConfig().getString("messages.staffnotify.bad");
+                        if (dbip.proxy_type.equals("Blacklisted")) {
+                            List<String> list = plugin.getConfig().getStringList("messages.staffnotify.banmessage");
+                            String[] array = list.toArray(new String[0]);
+                            kick(p, Util.chat(String.join("\n", array)));
                             notifyStaff(p, ip, String.join(", ", location), operation, status, proxy_type);
                         } else {
-                            String operation = plugin.getConfig().getString("messages.staffnotify.kicked");
-                            String status = plugin.getConfig().getString("messages.staffnotify.bad");
-                            if (dbip.proxy_type.equals("Blacklisted")) {
-                                List<String> list = plugin.getConfig().getStringList("messages.staffnotify.banmessage");
-                                String[] array = list.toArray(new String[0]);
-                                kick(p, Util.chat(String.join("\n", array)));
-                                notifyStaff(p, ip, String.join(", ", location), operation, status, proxy_type);
-                            } else {
-                                List<String> list = plugin.getConfig().getStringList("messages.staffnotify.kickmessage");
-                                String[] array = list.toArray(new String[0]);
-                                kick(p, Util.chat(String.join("\n", array)));
-                                notifyStaff(p, ip, String.join(", ", location), operation, status, proxy_type);
-                            }
+                            List<String> list = plugin.getConfig().getStringList("messages.staffnotify.kickmessage");
+                            String[] array = list.toArray(new String[0]);
+                            kick(p, Util.chat(String.join("\n", array)));
+                            notifyStaff(p, ip, String.join(", ", location), operation, status, proxy_type);
                         }
-                    } else {
-                        String[] proxy = new String[2];
-                        ProxyCheck.get(ip, proxy_result -> {
-                            proxy[0] = proxy_result[0];
-                            proxy[1] = proxy_result[1];
-                            String operation = "";
-                            String status = "";
-
-                            if (proxy[0].equals("no")) {
-                                operation = plugin.getConfig().getString("messages.staffnotify.connected");
-                                status = plugin.getConfig().getString("messages.staffnotify.good");
-                                saveIP(ip, proxy[1], true);
-                                notifyStaff(p, ip, String.join(", ", location), operation, status, proxy[1]);
-                            } else {
-                                operation = plugin.getConfig().getString("messages.staffnotify.kicked");
-                                status = plugin.getConfig().getString("messages.staffnotify.bad");
-                                List<String> list = plugin.getConfig().getStringList("messages.staffnotify.kickmessage");
-                                String[] array = list.toArray(new String[0]);
-                                kick(p, Util.chat(String.join("\n", array)));
-                                saveIP(ip, proxy[1], false);
-                                notifyStaff(p, ip, String.join(", ", location), operation, status, proxy[1]);
-                            }
-                        });
                     }
-                });
+                } else {
+                    String[] proxy = ProxyCheck.get(ip);
+                    String operation = "";
+                    String status = "";
+
+                    if (proxy[0].equals("no")) {
+                        operation = plugin.getConfig().getString("messages.staffnotify.connected");
+                        status = plugin.getConfig().getString("messages.staffnotify.good");
+                        saveIP(ip, proxy[1], true);
+                        notifyStaff(p, ip, String.join(", ", location), operation, status, proxy[1]);
+                    } else {
+                        operation = plugin.getConfig().getString("messages.staffnotify.kicked");
+                        status = plugin.getConfig().getString("messages.staffnotify.bad");
+                        List<String> list = plugin.getConfig().getStringList("messages.staffnotify.kickmessage");
+                        String[] array = list.toArray(new String[0]);
+                        kick(p, Util.chat(String.join("\n", array)));
+                        saveIP(ip, proxy[1], false);
+                        notifyStaff(p, ip, String.join(", ", location), operation, status, proxy[1]);
+                    }
+                }
             });
         }
     }
@@ -127,7 +116,13 @@ public class PlayerJoin implements Listener {
                 if (plugin.getConfig().contains("staff." + staff.getDisplayName() + ".notify")) {
                     if (plugin.getConfig().getBoolean("staff." + staff.getDisplayName() + ".notify")) {
                         for (String msg: array) {
-                            staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
+                            if (!plugin.getConfig().getBoolean("check-location")) {
+                                if (!msg.contains("%location%")) {
+                                    staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
+                                }
+                            } else {
+                                staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
+                            }
                         }
                     }
                 } else {

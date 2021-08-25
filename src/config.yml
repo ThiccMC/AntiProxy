@@ -1,4 +1,5 @@
 enable: true
+check-location: true
 api-key:
   proxycheck: 850828-440g01-30op02-7j935t
 # Message placeholders:
