@@ -40,14 +40,14 @@ public class ProxyCheck { ;
             result[1] = json.getAsJsonObject(ip).get("type").getAsString();
             return result;
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
         return result;
     }
 
     private static final void checkAsync() {
         if (Bukkit.isPrimaryThread()) {
-            throw new IllegalStateException("Attempted to execute a database operation from the server thread!");
+            throw new IllegalStateException("Attempted to execute a HTTP request operation from the server thread!");
         }
     }
 }

@@ -104,17 +104,16 @@ public class AntiProxy implements CommandExecutor {
                     sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.playeronly"))));
                     return true;
                 }
+
                 List<String> list = plugin.getConfig().getStringList("messages.usage.notify");
                 String[] array = list.toArray(new String[0]);
-                if (plugin.getConfig().contains("staff." + ((Player) sender).getDisplayName() + ".notify")) {
+                if (plugin.getConfig().contains("staff." + ((Player) sender).getName() + ".notify")) {
                     for (String msg: array) {
                         String msgstr = Placeholders.get(msg, null, ((Player) sender).getDisplayName());
                         sender.sendMessage(Util.chat(msgstr));
                     }
                 } else {
-                    plugin.getConfig().set("staff." + ((Player) sender).getDisplayName() + ".notify", true);
-                    plugin.saveConfig();
-                    plugin.reloadConfig();
+                    addStaff((Player) sender);
                     for (String msg: array) {
                         String msgstr = Placeholders.get(msg, null, ((Player) sender).getDisplayName());
                         sender.sendMessage(Util.chat(msgstr));
@@ -192,21 +191,37 @@ public class AntiProxy implements CommandExecutor {
                 }
 
                 Player p = (Player) sender;
-                Boolean notify = plugin.getConfig().getBoolean("staff." + p.getDisplayName() + ".notify");
-                if (args[1].equalsIgnoreCase(String.valueOf(notify))) {
-                    String msg = plugin.getConfig().getString("messages.already.notifystatus");
-                    sender.sendMessage(Util.chat(Placeholders.get(msg, null, p.getDisplayName())));
+                if (plugin.getConfig().contains("staff." + p.getName() + ".notify")) {
+                    Boolean notify = plugin.getConfig().getBoolean("staff." + p.getName() + ".notify");
+                    if (args[1].equalsIgnoreCase(String.valueOf(notify))) {
+                        String msg = plugin.getConfig().getString("messages.already.notifystatus");
+                        sender.sendMessage(Util.chat(Placeholders.get(msg, null, p.getDisplayName())));
+                    } else {
+                        if (args[1].equalsIgnoreCase("true")) {
+                            plugin.getConfig().set("staff." + p.getName() + ".notify", true);
+                            plugin.saveConfig();
+                            plugin.reloadConfig();
+                            sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"),null, p.getName())));
+                        } else if (args[1].equalsIgnoreCase("false")) {
+                            plugin.getConfig().set("staff." + p.getName() + ".notify", false);
+                            plugin.saveConfig();
+                            plugin.reloadConfig();
+                            sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"), null, p.getName())));
+                        } else {
+                            sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.invalidusage"))));
+                        }
+                    }
                 } else {
                     if (args[1].equalsIgnoreCase("true")) {
-                        plugin.getConfig().set("staff." + p.getDisplayName() + ".notify", true);
+                        plugin.getConfig().set("staff." + p.getName() + ".notify", true);
                         plugin.saveConfig();
                         plugin.reloadConfig();
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"),null, p.getDisplayName())));
+                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"),null, p.getName())));
                     } else if (args[1].equalsIgnoreCase("false")) {
-                        plugin.getConfig().set("staff." + p.getDisplayName() + ".notify", false);
+                        plugin.getConfig().set("staff." + p.getName() + ".notify", false);
                         plugin.saveConfig();
                         plugin.reloadConfig();
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"), null, p.getDisplayName())));
+                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"), null, p.getName())));
                     } else {
                         sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.invalidusage"))));
                     }
@@ -411,5 +426,11 @@ public class AntiProxy implements CommandExecutor {
             }
         }
         return true;
+    }
+
+    public void addStaff(Player p) {
+        plugin.getConfig().set("staff." + p.getName() + ".notify", true);
+        plugin.saveConfig();
+        plugin.reloadConfig();
     }
 }

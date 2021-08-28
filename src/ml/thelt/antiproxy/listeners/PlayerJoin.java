@@ -1,5 +1,7 @@
 package ml.thelt.antiproxy.listeners;
 
+import com.lenis0012.bukkit.loginsecurity.LoginSecurity;
+import com.lenis0012.bukkit.loginsecurity.session.PlayerSession;
 import ml.thelt.antiproxy.Main;
 import ml.thelt.antiproxy.api.IPapi;
 import ml.thelt.antiproxy.api.ProxyCheck;
@@ -113,8 +115,27 @@ public class PlayerJoin implements Listener {
         String[] array = list.toArray(new String[0]);
         for (Player staff : Bukkit.getOnlinePlayers()) {
             if (staff.hasPermission("antiproxy.admin") || staff.isOp()) {
-                if (plugin.getConfig().contains("staff." + staff.getDisplayName() + ".notify")) {
-                    if (plugin.getConfig().getBoolean("staff." + staff.getDisplayName() + ".notify")) {
+                if (plugin.getConfig().contains("staff." + staff.getName() + ".notify")) {
+                    if (plugin.getConfig().getBoolean("staff." + staff.getName() + ".notify")) {
+                        PlayerSession session = LoginSecurity.getSessionManager().getPlayerSession(staff);
+                        if (session.isLoggedIn()) {
+                            for (String msg: array) {
+                                if (!plugin.getConfig().getBoolean("check-location")) {
+                                    if (!msg.contains("%location%")) {
+                                        staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
+                                    }
+                                } else {
+                                    staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    plugin.getConfig().set("staff." + staff.getName() + ".notify", true);
+                    plugin.saveConfig();
+                    plugin.reloadConfig();
+                    PlayerSession session = LoginSecurity.getSessionManager().getPlayerSession(staff);
+                    if (session.isLoggedIn()) {
                         for (String msg: array) {
                             if (!plugin.getConfig().getBoolean("check-location")) {
                                 if (!msg.contains("%location%")) {
@@ -124,13 +145,6 @@ public class PlayerJoin implements Listener {
                                 staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
                             }
                         }
-                    }
-                } else {
-                    plugin.getConfig().set("staff." + staff.getDisplayName() + ".notify", true);
-                    plugin.saveConfig();
-                    plugin.reloadConfig();
-                    for (String msg: array) {
-                        staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
                     }
                 }
             }

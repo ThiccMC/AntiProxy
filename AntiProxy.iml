@@ -11,5 +11,6 @@
     <orderEntry type="library" name="discord_role_sync-1.0.1" level="project" />
     <orderEntry type="library" name="sqlite-jdbc-3.36.0.1" level="project" />
     <orderEntry type="library" name="Vault" level="project" />
+    <orderEntry type="library" name="LoginSecurity-3.1-Spigot" level="project" />
   </component>
 </module>

@@ -22,7 +22,8 @@ public class IPapi {
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestMethod("GET");
             con.setConnectTimeout(10000);
-                
+            con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
             String line = "";
             InputStreamReader isr = new InputStreamReader(con.getInputStream());
             BufferedReader br = new BufferedReader(isr);
@@ -32,14 +33,17 @@ public class IPapi {
             }
             br.close();
             JsonObject json = new JsonParser().parse(res.toString()).getAsJsonObject();
-            location[0] = json.get("regionName").getAsString();
-            location[1] = json.get("city").getAsString();
+            location[0] = json.get("city").getAsString();
+            location[1] = json.get("regionName").getAsString();
             location[2] = json.get("country").getAsString();
             return location;
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
-        return null;
+        location[0] = null;
+        location[1] = null;
+        location[2] = null;
+        return location;
     }
 
     private static final void checkAsync() {

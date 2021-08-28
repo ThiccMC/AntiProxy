@@ -1,10 +1,11 @@
 name: AntiProxy
 main: ml.thelt.antiproxy.Main
-version: pre_RTM-build-1.1
+version: pre_RTM-build-1.2
 api-version: 1.17
 description: Prevent Players connecting to server with Proxies/VPN
 author: TheLT
 website: https://thiccsmp.qtpc.tech
+depend: [LoginSecurity]
 commands:
   ap:
     description: AntiProxy plugin command
