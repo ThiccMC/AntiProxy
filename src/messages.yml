@@ -1,0 +1,182 @@
+# Message placeholders:
+# %prefix%: Get plugin's prefix
+# %version%: Get plugin version
+# %player%: Player's name
+# %plugin_status%: Get plugin status (Enabled or Disabled)
+# %player_notify%: Get player notification status (Enabled or Disabled)
+# %ip%: Player's IP
+# %proxy_type%: IP's type - Player IP; VPN/Proxy; Whitelisted; Blacklisted
+# %location%: Player's location
+# %clear_option%: Clear data option
+# %status%: Status of player's IP (Good, Bad)
+# %playerAction%: Player is kicked or connected
+# %score%: Score given based on APIs' results
+# %scoreColor%: Color
+# %api%: API Provider
+# %api_status%: Status of API (Enable/Disable)
+
+messages:
+  prefix: "&b[AntiProxy]"
+  enabled: "&aEnabled"
+  disabled: "&cDisabled"
+  noperm: "&cYou don't have permission to execute this command!"
+  playeronly: "%prefix% &eThis command is only available for player!"
+  consoleonly: "%prefix% &eThis command is only available for console!"
+  isdisable: "%prefix% &eThe plugin is currently disabled. Enabling the plugin by using &6/ap enable true &ein the Console!"
+  reloaded: "%prefix% &eThe plugin has been reloaded!"
+  already:
+    pluginstatus: "%prefix% &eThe plugin is already %plugin_status%&e!"
+    whitelisted: "%prefix% &eIP &6%ip% &eis already in whitelist!"
+    butwhitelist: "%prefix% &eIP &6%ip% &eis in whitelist! If you wish to blacklist this IP, use &6/ap whitelist remove &6%ip%&e."
+    blacklisted: "%prefix% &eIP &6%ip% &eis already in blacklist!"
+    butblacklist: "%prefix% &eIP &6%ip% &eis in blacklist! If you wish to whitelist this IP, use &6/ap blacklist remove &6%ip%&e."
+    banned: "%prefix% &eIP &6%ip% &eis already banned!"
+    unbanned: "%prefix% &eIP &6%ip% &eis already unbanned!"
+  newstatus:
+    plugin: "%prefix% &ePlugin is now %plugin_status%&e!"
+    notify: "%prefix% &eYou have %player_notify% &enotification from plugin!"
+  invalidusage: "%prefix% &eInvalid usage! Please check the command usage again."
+  confirm:
+    clearwhitelist:
+      - "%prefix% &eAre you sure you want to clear whitelist? Players will have to be IP checked again."
+      - "%prefix% &eType &6/ap whitelist clear confirm &eto confirm your decision."
+    clearblacklist:
+      - "%prefix% &eAre you sure you want to clear blacklist? Plugin will have to check Proxy/VPN IPs again."
+      - "%prefix% &eType &6/ap blacklist clear confirm &eto confirm your decision."
+  success:
+    whitelist:
+      add: "%prefix% &eAdded &6%ip% &eto whitelist."
+      remove: "%prefix% &eRemoved &6%ip% &efrom whitelist."
+      ban: "%prefix% &eBanned &6%ip%&e."
+      clear: "%prefix% &eCleared whitelist."
+      invalid: "%prefix% &eInvalid IP address. The IPv4 address should be this format: &6#.#.#.#"
+      notfound: "%prefix% &eCannot find &6%ip% &efor whitelist."
+      fail: "%prefix% &eSomething went wrong! Please try again later."
+    blacklist:
+      add: "%prefix% &eAdded &6%ip% &eto blacklist."
+      remove: "%prefix% &eRemoved &6%ip% &efrom blacklist."
+      ban: "%prefix% &eBanned &6%ip%&e."
+      clear: "%prefix% &eCleared blacklist."
+      invalid: "%prefix% &eInvalid IP address. The IPv4 address should be this format: &6#.#.#.#"
+      notfound: "%prefix% &eCannot find &6%ip% &efor blacklist."
+      fail: "%prefix% &eSomething went wrong! Please try again later."
+    api:
+      changed: "%prefix% &eSuccessfully changed %api% API Key!"
+      newstatus: "%prefix% &eSuccessfully %api_status% &e%api% API!"
+    cleardata:
+      done: "%prefix% &eSuccessfully cleared %clear_option% data!"
+  info:
+    - "&6&m---------------------------------------"
+    - "&bAntiProxy &eplugin. Version &6%version%"
+    - "&eType &6/ap help &efor a list of commands."
+    - "&ePlugin Status: %plugin_status%"
+    - "&6&m---------------------------------------"
+  help:
+    - "&6&m---------------------------------------"
+    - "&bAntiProxy &6 - Commands list"
+    - "&6/ap help&e: Print this help message."
+    - "&6/ap whitelist&e: Whitelist section."
+    - "&6/ap blacklist&e: Blacklist section."
+    - "&6/ap stats&e: Get statistics about the plugin."
+    - "&6/ap api&e: API section."
+    - "&6/ap enable&e: Enable or disable the plugin."
+    - "&6/ap notify&e: Enable or disable notification from plugin."
+    - "&6/ap clear&e: Clear data from database."
+    - "&6/ap reload&e: Reload config file."
+    - "&6&m---------------------------------------"
+  whitelist:
+    - "&6&m---------------------------------------"
+    - "&bAntiProxy &6 - Whitelist"
+    - "&6/ap whitelist add&e: Add an IPv4 to whitelist."
+    - "&6/ap whitelist remove&e: Remove an IPv4 from whitelist."
+    - "&6/ap whitelist clear&e: Clear whitelist."
+    - "&6&m---------------------------------------"
+  blacklist:
+    - "&6&m---------------------------------------"
+    - "&bAntiProxy &6 - Blacklist"
+    - "&6/ap blacklist add&e: Add an IPv4 to blacklist."
+    - "&6/ap blacklist remove&e: Remove an IPv4 from blacklist."
+    - "&6/ap blacklist clear&e: Clear blacklist."
+    - "&6&m---------------------------------------"
+  api:
+    - "&6&m---------------------------------------"
+    - "&bAntiProxy &6 - API"
+    - "&6/ap api set [ provider ] [ key ]: Set key for API."
+    - "&6/ap api enable [ provider ] [ true | false ]: Enable/Disable an API."
+    - "&eAvalable arguments [ provider ]:"
+    - "&7&oProxyCheck&f: ProxyCheck.io API."
+    - "&7&oVPNApi&f: VPNApi.io API."
+    - "&7&oFunkemunky&f: Funkemunky.cc API (aka KauriVPN)."
+    - "&7&oIPHub&f: IPHub.info API."
+    - "&6&m---------------------------------------"
+  stats:
+    - "&6&m---------------------------------------"
+    - "&bAntiProxy &6 - statistics"
+    - "&eA total of lol"
+    - "&6&m---------------------------------------"
+  cleardata:
+    - "&6&m---------------------------------------"
+    - "&bAntiProxy &6 - Clear data"
+    - "&6/ap clear [ args ]"
+    - "&eAvailable arguments [ args ]:"
+    - "&7&oplayer_ip&f: Clear all player IP (excluding whitelisted)."
+    - "&7&ogood_ip&f: Clear all good player IP."
+    - "&7&oproxy_ip&f: Clear all player IP (excluding blacklisted)."
+    - "&7&obad_ip&f: Clear all good player IP."
+    - "&7&oip_database&f: Clear all IP in the database (Player will have to IP check again)."
+    - "&7&ostaff&f: Clear all staff config."
+    - "&7&oall&f: Clear all and make it fresh (console only!)"
+    - "&6&m---------------------------------------"
+  staffnotify:
+    notify:
+      - "%scoreColor%&m---------------------------------"
+      - "&a%player% &e%playerAction%."
+      - "&eIP: &6%ip% (&e%proxy_type%&6)"
+      - "&eLocation: &6%location%"
+      - "&eScore: %scoreColor%%score%&6/100"
+      - "%scoreColor%&m---------------------------------"
+    console:
+      - "&6%player% &e%playerAction%! &e[IP: &6%ip% (%proxy_type%) &e- Location: &6%location% &e- Score: %scoreColor%%score% &e]"
+    connected: "&aconnected"
+    kicked: "&ckicked"
+    kickmessage:
+      - "&cUsing Proxy/VPN is not allowed!"
+      - "&r"
+      - "&cIf you think this is a mistake, consider join &ehttps://qtpc.tech/discord &cand contact a staff member."
+    banmessage:
+      - "&cYour IP has been blacklisted!"
+      - "&r"
+      - "&cIf you think this is a mistake, consider join &ehttps://qtpc.tech/discord &cand contact a staff member."
+  usage:
+    player:
+      - "%prefix% &eUsage: &6/ap player [ Player ]&e: Get an online player's info."
+    apikey:
+      - "%prefix% &eUsage: &6/ap apikey [ API key ]&e: Change ProxyCheck.io API key."
+    enable:
+      - "%prefix% &eUsage: &6/ap enable [ true | false ]&e: Enable or disable the plugin."
+    notify:
+      - "%prefix% &eYou have %player_notify% &enotification from plugin!"
+      - "%prefix% &eUsage: &6/ap notify [ true | false ]&e: Enable or disable notification from plugin."
+  player:
+    hoverMessage: "&eClick here!"
+    info:
+      - "&6&m---------------------------------------"
+      - "&bAntiProxy &6 - Player's info"
+      - "&6/player [ player ]&e: Get a player's info"
+      - "&6&m---------------------------------------"
+    check:
+      - "&6&m---------------------------------------"
+      - "%player%&e's information:"
+      - "&6Username: &e%player_name%"
+      - "&6Rank: %group%"
+      - "&6IP: &e%ip%"
+      - "&6Linked Discord: %discord_tag%"
+      - "&8[ &6#cmd:Options for %player_name%:/player %player_name% option# &8] "
+      - "&6&m---------------------------------------"
+    option:
+      - "&6&m---------------------------------------"
+      - "&eWhat you want to do with %player%&e?"
+      - "&8[&2&l #cmd:KICK:/kick %player_name% {add reason here}# &8]&7: Kick the player."
+      - "&8[&3&l #cmd:BAN:/ban %player_name% {add reason here}# &8]&7: Ban the player."
+      - "&8[&c&l #cmd:BLACKLIST IP:/ap blacklist add %ip%;/kick %player_name% {add reason here}# &8]&7: Blacklist player's IP and kick the player."
+      - "&6&m---------------------------------------"

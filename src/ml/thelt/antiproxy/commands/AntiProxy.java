@@ -1,6 +1,8 @@
 package ml.thelt.antiproxy.commands;
 
 import ml.thelt.antiproxy.Main;
+import ml.thelt.antiproxy.commands.sub.*;
+import ml.thelt.antiproxy.commands.sub.Stats;
 import ml.thelt.antiproxy.lib.*;
 import ml.thelt.antiproxy.sql.DatabaseHandler;
 import org.bukkit.command.Command;
@@ -8,9 +10,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.sql.SQLException;
-import java.util.List;
-
+import java.util.Arrays;
 
 public class AntiProxy implements CommandExecutor {
     private Main plugin;
@@ -20,13 +20,14 @@ public class AntiProxy implements CommandExecutor {
         this.db = db;
         this.plugin = plugin;
     }
+
     /* Command lists:
      * ap help
      * ap player [ Player ]
      * ap whitelist [ ... ]
      * ap blacklist [ ... ]
      * ap stats
-     * ap apikey [ API Key ]
+     * ap api [ ... ]
      * ap enable [ true / false ]
      * ap notify [ true / false ]
      * ap reload
@@ -35,402 +36,124 @@ public class AntiProxy implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String str, String[] args) {
         if (!sender.hasPermission("antiproxy.admin") || !sender.isOp()) {
-            sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.noperm"))));
+            sender.sendMessage(Util.chat(Placeholders.get(plugin.getMessages().getString("messages.noperm"), plugin)));
             return true;
         }
 
         if (!plugin.getConfig().getBoolean("enable")) {
             if (sender instanceof Player) {
-                sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.isdisable"))));
+                sender.sendMessage(Util.chat(Placeholders.get(plugin.getMessages().getString("messages.isdisable"), plugin)));
                 return true;
             }
         }
 
         if (args.length == 0) {
-            List<String> list = plugin.getConfig().getStringList("messages.info");
-            String[] array = list.toArray(new String[0]);
-            for (String msg: array) {
-                sender.sendMessage(Util.chat(Placeholders.get(msg)));
-            }
+            Info inf = new Info(plugin);
+            inf.run(sender);
         }
 
         if (args.length == 1) {
             if (args[0].equalsIgnoreCase("help")) {
-                List<String> list = plugin.getConfig().getStringList("messages.help");
-                String[] array = list.toArray(new String[0]);
-                for (String msg: array) {
-                    sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                }
-            } else if (args[0].equalsIgnoreCase("player")) {
-//                List<String> list = plugin.getConfig().getStringList("messages.usage.player");
-//                String[] array = list.toArray(new String[0]);
-//                for (String msg: array) {
-//                    sender.sendMessage(Util.chat(Placeholders.get(msg)));
-//                }
-                sender.sendMessage(Util.chat("&cThis command will be available soon!"));
-            } else if (args[0].equalsIgnoreCase("whitelist")) {
-                List<String> list = plugin.getConfig().getStringList("messages.whitelist");
-                String[] array = list.toArray(new String[0]);
-                for (String msg: array) {
-                    sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                }
-            } else if (args[0].equalsIgnoreCase("blacklist")) {
-                List<String> list = plugin.getConfig().getStringList("messages.blacklist");
-                String[] array = list.toArray(new String[0]);
-                for (String msg: array) {
-                    sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                }
-            } else if (args[0].equalsIgnoreCase("stats")) {
-//                List<String> list = plugin.getConfig().getStringList("messages.stats");
-//                String[] array = list.toArray(new String[0]);
-//                for (String msg: array) {
-//                    sender.sendMessage(Util.chat(Placeholders.get(msg)));
-//                }
-                sender.sendMessage(Util.chat("&cThis command will be available soon!"));
-            } else if (args[0].equalsIgnoreCase("apikey")) {
-                List<String> list = plugin.getConfig().getStringList("messages.usage.apikey");
-                String[] array = list.toArray(new String[0]);
-                for (String msg: array) {
-                    sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                }
-            } else if (args[0].equalsIgnoreCase("enable")) {
-                List<String> list = plugin.getConfig().getStringList("messages.usage.enable");
-                String[] array = list.toArray(new String[0]);
-                for (String msg: array) {
-                    sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                }
-            } else if (args[0].equalsIgnoreCase("notify")) {
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.playeronly"))));
-                    return true;
-                }
-
-                List<String> list = plugin.getConfig().getStringList("messages.usage.notify");
-                String[] array = list.toArray(new String[0]);
-                if (plugin.getConfig().contains("staff." + ((Player) sender).getName() + ".notify")) {
-                    for (String msg: array) {
-                        String msgstr = Placeholders.get(msg, null, ((Player) sender).getDisplayName());
-                        sender.sendMessage(Util.chat(msgstr));
-                    }
-                } else {
-                    addStaff((Player) sender);
-                    for (String msg: array) {
-                        String msgstr = Placeholders.get(msg, null, ((Player) sender).getDisplayName());
-                        sender.sendMessage(Util.chat(msgstr));
-                    }
-                }
-            } else if (args[0].equalsIgnoreCase("reload")) {
-                plugin.reloadConfig();
-                sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.reloaded"))));
-            }
-        }
-
-
-        if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("enable")) {
-                Boolean enable = plugin.getConfig().getBoolean("enable");
-                if (args[1].equalsIgnoreCase(String.valueOf(enable))) {
-                    List<String> list = plugin.getConfig().getStringList("messages.alreadystatus");
-                    String[] array = list.toArray(new String[0]);
-                    for (String msg: array) {
-                        sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                    }
-                } else {
-                    if (args[1].equalsIgnoreCase("true")) {
-                        plugin.getConfig().set("enable", true);
-                        plugin.saveConfig();
-                        plugin.reloadConfig();
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.plugin"))));
-                    } else if (args[1].equalsIgnoreCase("false")) {
-                        plugin.getConfig().set("enable", false);
-                        plugin.saveConfig();
-                        plugin.reloadConfig();
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.plugin"))));
-                    } else {
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.invalidusage"))));
-                    }
-                }
+                Help help = new Help(plugin);
+                help.run(sender);
             }
 
             if (args[0].equalsIgnoreCase("whitelist")) {
-                if (args[1].equalsIgnoreCase("clear")) {
-                    List<String> list = plugin.getConfig().getStringList("messages.confirm.clearwhitelist");
-                    String[] array = list.toArray(new String[0]);
-                    for (String msg: array) {
-                        sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                    }
-                } else {
-                    List<String> list = plugin.getConfig().getStringList("messages.whitelist");
-                    String[] array = list.toArray(new String[0]);
-                    for (String msg: array) {
-                        sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                    }
-                }
+                Whitelist wl = new Whitelist(plugin);
+                wl.info(sender);
             }
 
             if (args[0].equalsIgnoreCase("blacklist")) {
-                if (args[1].equalsIgnoreCase("clear")) {
-                    List<String> list = plugin.getConfig().getStringList("messages.confirm.clearblacklist");
-                    String[] array = list.toArray(new String[0]);
-                    for (String msg: array) {
-                        sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                    }
-                } else {
-                    List<String> list = plugin.getConfig().getStringList("messages.blacklist");
-                    String[] array = list.toArray(new String[0]);
-                    for (String msg: array) {
-                        sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                    }
-                }
+                Blacklist bl = new Blacklist(plugin);
+                bl.info(sender);
             }
 
-            if (args[0].equalsIgnoreCase("notify")) {
-                if (!(sender instanceof Player)) {
-                    sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("playeronly"))));
-                    return true;
-                }
-
-                Player p = (Player) sender;
-                if (plugin.getConfig().contains("staff." + p.getName() + ".notify")) {
-                    Boolean notify = plugin.getConfig().getBoolean("staff." + p.getName() + ".notify");
-                    if (args[1].equalsIgnoreCase(String.valueOf(notify))) {
-                        String msg = plugin.getConfig().getString("messages.already.notifystatus");
-                        sender.sendMessage(Util.chat(Placeholders.get(msg, null, p.getDisplayName())));
-                    } else {
-                        if (args[1].equalsIgnoreCase("true")) {
-                            plugin.getConfig().set("staff." + p.getName() + ".notify", true);
-                            plugin.saveConfig();
-                            plugin.reloadConfig();
-                            sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"),null, p.getName())));
-                        } else if (args[1].equalsIgnoreCase("false")) {
-                            plugin.getConfig().set("staff." + p.getName() + ".notify", false);
-                            plugin.saveConfig();
-                            plugin.reloadConfig();
-                            sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"), null, p.getName())));
-                        } else {
-                            sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.invalidusage"))));
-                        }
-                    }
-                } else {
-                    if (args[1].equalsIgnoreCase("true")) {
-                        plugin.getConfig().set("staff." + p.getName() + ".notify", true);
-                        plugin.saveConfig();
-                        plugin.reloadConfig();
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"),null, p.getName())));
-                    } else if (args[1].equalsIgnoreCase("false")) {
-                        plugin.getConfig().set("staff." + p.getName() + ".notify", false);
-                        plugin.saveConfig();
-                        plugin.reloadConfig();
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.newstatus.notify"), null, p.getName())));
-                    } else {
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.invalidusage"))));
-                    }
-                }
-            }
-
-            if (args[0].equalsIgnoreCase("player")) {
+            if (args[0].equalsIgnoreCase("stats")) {
                 sender.sendMessage(Util.chat("&cThis command will be available soon!"));
             }
 
-            if (args[0].equalsIgnoreCase("apikey")) {
-                String key = args[1];
-                plugin.getConfig().set("api-key.proxycheck",key);
-                plugin.saveConfig();
+            if (args[0].equalsIgnoreCase("api")) {
+                API api = new API(plugin);
+                api.info(sender);
+            }
+
+            if (args[0].equalsIgnoreCase("enable")) {
+                Enable en = new Enable(plugin);
+                en.info(sender);
+            }
+
+            if (args[0].equalsIgnoreCase("notify")) {
+                Notify not = new Notify(plugin);
+                not.info(sender);
+            }
+
+            if (args[0].equalsIgnoreCase("clear")) {
+                ClearData clear = new ClearData(plugin);
+                clear.info(sender);
+            }
+
+            if (args[0].equalsIgnoreCase("reload")) {
                 plugin.reloadConfig();
-                sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.apikey.changed"))));
+                plugin.saveMessagesFile();
+                sender.sendMessage(Util.chat(Placeholders.get(plugin.getMessages().getString("messages.reloaded"), plugin)));
+            }
+
+            if (args[0].equalsIgnoreCase("test")) {
+                Stats stats = new Stats(plugin);
+                stats.run(sender);
+            }
+        }
+
+        if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("enable")) {
+                Enable en = new Enable(plugin);
+                en.set(sender, args[1]);
+            }
+
+            if (args[0].equalsIgnoreCase("whitelist")) {
+                Whitelist wl = new Whitelist(plugin);
+                wl.sb(sender, args);
+            }
+
+            if (args[0].equalsIgnoreCase("blacklist")) {
+                Blacklist bl = new Blacklist(plugin);
+                bl.sb(sender, args);
+            }
+
+            if (args[0].equalsIgnoreCase("notify")) {
+                Notify not = new Notify(plugin);
+                not.set(sender, args);
+            }
+
+            if (args[0].equalsIgnoreCase("clear")) {
+                ClearData clear = new ClearData(plugin);
+                clear.run(sender, args, db);
             }
         }
 
         if (args.length == 3) {
             if (args[0].equalsIgnoreCase("whitelist")) {
-                if (args[1].equalsIgnoreCase("add")) {
-                    Boolean correct = Util.validIP(args[2]);
-                    if (correct) {
-                        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                            DatabaseHandler.GetInternetProtocol dbip;
-                            try {
-                                dbip = db.getIP(args[2]);
-                                if (dbip != null) {
-                                    if (dbip.status == false) {
-                                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.already.butblacklist"), args[2])));
-                                    } else {
-                                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.already.whitelisted"), args[2])));
-                                    }
-                                } else {
-                                    try {
-                                        db.addIP(args[2], "Whitelisted", true);
-                                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.whitelist.add"), args[2])));
-                                    } catch (SQLException throwables) {
-                                        sender.sendMessage(Util.chat("&cSomething went wrong while adding to whitelist!"));
-                                        throwables.printStackTrace();
-                                    }
-                                }
-                            } catch (SQLException e) {
-                                System.out.println(Util.chat("&cError while getting data from database!"));
-                                e.printStackTrace();
-                                return;
-                            }
-                        });
-                    } else {
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.whitelist.invalid"))));
-                    }
-                } else if (args[1].equalsIgnoreCase("remove")) {
-                    Boolean correct = Util.validIP(args[2]);
-                    if (correct) {
-                        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                            DatabaseHandler.GetInternetProtocol dbip;
-                            try {
-                                dbip = db.getIP(args[2]);
-                                if (dbip == null) {
-                                    sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.whitelist.notfound"), args[2])));
-                                } else {
-                                    if (dbip.status == false) {
-                                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.already.butblacklist"), args[2])));
-                                    } else {
-                                        try {
-                                            db.removeIP(args[2]);
-                                            sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.whitelist.remove"), args[2])));
-                                        } catch (SQLException throwables) {
-                                            sender.sendMessage(Util.chat("&cSomething went wrong while removing from whitelist!"));
-                                            throwables.printStackTrace();
-                                        }
-                                    }
-                                }
-                            } catch (SQLException e) {
-                                System.out.println(Util.chat("&cError while getting data from database!"));
-                                e.printStackTrace();
-                                return;
-                            }
-                        });
-                    } else {
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.whitelist.invalid"))));
-                    }
-                } else if (args[1].equalsIgnoreCase("clear")) {
-                    if (args[2].equalsIgnoreCase("confirm")) {
-                        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                            DatabaseHandler.GetInternetProtocol dbip;
-                            try {
-                                db.clearList(true);
-                                sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.whitelist.clear"))));
-                            } catch (SQLException throwables) {
-                                sender.sendMessage(Util.chat("&cSomething went wrong!"));
-                                throwables.printStackTrace();
-                            }
-                        });
-                    } else {
-                        List<String> list = plugin.getConfig().getStringList("messages.confirm.clearwhitelist");
-                        String[] array = list.toArray(new String[0]);
-                        for (String msg: array) {
-                            sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                        }
-                    }
-                } else {
-                    List<String> list = plugin.getConfig().getStringList("messages.whitelist");
-                    String[] array = list.toArray(new String[0]);
-                    for (String msg: array) {
-                        sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                    }
-                }
+                Whitelist wl = new Whitelist(plugin);
+                wl.operation(sender, args, db);
             }
 
-
             if (args[0].equalsIgnoreCase("blacklist")) {
-                if (args[1].equalsIgnoreCase("add")) {
-                    Boolean correct = Util.validIP(args[2]);
-                    if (correct) {
-                        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                            DatabaseHandler.GetInternetProtocol dbip;
-                            try {
-                                dbip = db.getIP(args[2]);
-                                if (dbip != null) {
-                                    if (dbip.status == true) {
-                                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.already.butwhitelist"), args[2])));
-                                    } else {
-                                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.already.blacklisted"), args[2])));
-                                    }
-                                } else {
-                                    try {
-                                        db.addIP(args[2], "Blacklisted", false);
-                                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.blacklist.add"), args[2])));
-                                    } catch (SQLException throwables) {
-                                        sender.sendMessage(Util.chat("&cSomething went wrong while adding to blacklist!"));
-                                        throwables.printStackTrace();
-                                        }
-                                    }
-                            } catch (SQLException e) {
-                                System.out.println(Util.chat("&cError while getting data from database!"));
-                                e.printStackTrace();
-                                return;
-                            }
-                        });
-                    } else {
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.blacklist.invalid"))));
-                    }
-                } else if (args[1].equalsIgnoreCase("remove")) {
-                    Boolean correct = Util.validIP(args[2]);
-                    if (correct) {
-                        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                            DatabaseHandler.GetInternetProtocol dbip;
-                            try {
-                                dbip = db.getIP(args[2]);
-                                if (dbip == null) {
-                                    sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.blacklist.notfound"), args[2])));
-                                } else {
-                                    if (dbip.status == true) {
-                                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.already.butwhitelist"), args[2])));
-                                    } else {
-                                        try {
-                                            db.removeIP(args[2]);
-                                            sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.blacklist.remove"), args[2])));
-                                        } catch (SQLException throwables) {
-                                            sender.sendMessage(Util.chat("&cSomething went wrong while removing from blacklist!"));
-                                            throwables.printStackTrace();
-                                        }
-                                    }
-                                }
-                            } catch (SQLException e) {
-                                System.out.println(Util.chat("&cError while getting data from database!"));
-                                e.printStackTrace();
-                                return;
-                            }
-                        });
-                    } else {
-                        sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.blacklist.invalid"))));
-                    }
-                } else if (args[1].equalsIgnoreCase("clear")) {
-                    if (args[2].equalsIgnoreCase("confirm")) {
-                        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                            DatabaseHandler.GetInternetProtocol dbip;
-                            try {
-                                db.clearList(false);
-                                sender.sendMessage(Util.chat(Placeholders.get(plugin.getConfig().getString("messages.success.blacklist.clear"))));
-                            } catch (SQLException throwables) {
-                                sender.sendMessage(Util.chat("&cSomething went wrong!"));
-                                throwables.printStackTrace();
-                            }
-                        });
-                    } else {
-                        List<String> list = plugin.getConfig().getStringList("messages.confirm.clearblacklist");
-                        String[] array = list.toArray(new String[0]);
-                        for (String msg : array) {
-                            sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                        }
-                    }
-                } else {
-                    List<String> list = plugin.getConfig().getStringList("messages.blacklist");
-                    String[] array = list.toArray(new String[0]);
-                    for (String msg : array) {
-                        sender.sendMessage(Util.chat(Placeholders.get(msg)));
-                    }
-                }
+                Blacklist bl = new Blacklist(plugin);
+                bl.operation(sender, args, db);
+            }
+
+            if (args[0].equalsIgnoreCase("api")) {
+                API api = new API(plugin);
+                api.info(sender);
+            }
+        }
+
+        if (args.length == 4) {
+            if (args[0].equalsIgnoreCase("api")) {
+                API api = new API(plugin);
+                api.run(sender, args);
             }
         }
         return true;
-    }
-
-    public void addStaff(Player p) {
-        plugin.getConfig().set("staff." + p.getName() + ".notify", true);
-        plugin.saveConfig();
-        plugin.reloadConfig();
     }
 }

@@ -1,6 +1,10 @@
 package ml.thelt.antiproxy.lib;
 
+import ml.thelt.antiproxy.Main;
 import org.bukkit.ChatColor;
+import org.bukkit.plugin.Plugin;
+
+import java.util.List;
 
 public class Util {
     public static String chat (String s) {

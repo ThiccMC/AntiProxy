@@ -3,8 +3,8 @@ package ml.thelt.antiproxy.listeners;
 import com.lenis0012.bukkit.loginsecurity.LoginSecurity;
 import com.lenis0012.bukkit.loginsecurity.session.PlayerSession;
 import ml.thelt.antiproxy.Main;
-import ml.thelt.antiproxy.api.IPapi;
-import ml.thelt.antiproxy.api.ProxyCheck;
+import ml.thelt.antiproxy.api.Location;
+import ml.thelt.antiproxy.api.Checker;
 import ml.thelt.antiproxy.lib.Placeholders;
 import ml.thelt.antiproxy.lib.Util;
 import ml.thelt.antiproxy.sql.DatabaseHandler;
@@ -13,169 +13,156 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.plugin.Plugin;
 
 import java.sql.SQLException;
 import java.util.List;
 
 public class PlayerJoin implements Listener {
-    private Plugin plugin = Main.getPlugin(Main.class);
     private final DatabaseHandler db;
+    private Main plugin;
 
-    public PlayerJoin(DatabaseHandler db) {
+    public PlayerJoin(Main plugin, DatabaseHandler db) {
+        this.plugin = plugin;
         this.db = db;
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event)
-    {
-        if (plugin.getConfig().getBoolean("enable")) {
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                // Get event player and player's IP
-                Player p = event.getPlayer();
-                String ip = p.getAddress().getHostString();
-
-                // Check if IP is localhost
-                if (ip.equals("127.0.0.1")) {
-                    String location = "Localhost";
-                    String operation = plugin.getConfig().getString("messages.staffnotify.connected");
-                    String status = plugin.getConfig().getString("messages.staffnotify.good");
-                    notifyStaff(p, ip, location, operation, status, "localhost");
-                    return;
-                }
-
-                // Get Player's location - ip-api.com
-                String[] location = IPapi.get(ip);
-                if (p.hasPermission("antiproxy.admin") || p.isOp()) {
-                    String operation = plugin.getConfig().getString("messages.staffnotify.connected");
-                    String status = plugin.getConfig().getString("messages.staffnotify.good");
-                    notifyStaff(p, ip, String.join(", ", location), operation, status, "Staff");
-                    return;
-                }
-
-                // Get database
-                DatabaseHandler.GetInternetProtocol dbip;
-                try {
-                    dbip = db.getIP(ip);
-                } catch (SQLException e) {
-                    System.out.println(Util.chat("&cError while getting data from database!"));
-                    e.printStackTrace();
-                    return;
-                }
-
-                if (dbip != null) {
-                    Boolean ip_status = dbip.status;
-                    String proxy_type = dbip.proxy_type;
-                    if (ip_status) {
-                        String operation = plugin.getConfig().getString("messages.staffnotify.connected");
-                        String status = plugin.getConfig().getString("messages.staffnotify.good");
-                        notifyStaff(p, ip, String.join(", ", location), operation, status, proxy_type);
-                    } else {
-                        String operation = plugin.getConfig().getString("messages.staffnotify.kicked");
-                        String status = plugin.getConfig().getString("messages.staffnotify.bad");
-                        if (dbip.proxy_type.equals("Blacklisted")) {
-                            List<String> list = plugin.getConfig().getStringList("messages.staffnotify.banmessage");
-                            String[] array = list.toArray(new String[0]);
-                            kick(p, Util.chat(String.join("\n", array)));
-                            notifyStaff(p, ip, String.join(", ", location), operation, status, proxy_type);
-                        } else {
-                            List<String> list = plugin.getConfig().getStringList("messages.staffnotify.kickmessage");
-                            String[] array = list.toArray(new String[0]);
-                            kick(p, Util.chat(String.join("\n", array)));
-                            notifyStaff(p, ip, String.join(", ", location), operation, status, proxy_type);
-                        }
-                    }
-                } else {
-                    String[] proxy = ProxyCheck.get(ip);
-                    String operation = "";
-                    String status = "";
-
-                    if (proxy[0].equals("no")) {
-                        operation = plugin.getConfig().getString("messages.staffnotify.connected");
-                        status = plugin.getConfig().getString("messages.staffnotify.good");
-                        saveIP(ip, proxy[1], true);
-                        notifyStaff(p, ip, String.join(", ", location), operation, status, proxy[1]);
-                    } else {
-                        operation = plugin.getConfig().getString("messages.staffnotify.kicked");
-                        status = plugin.getConfig().getString("messages.staffnotify.bad");
-                        List<String> list = plugin.getConfig().getStringList("messages.staffnotify.kickmessage");
-                        String[] array = list.toArray(new String[0]);
-                        kick(p, Util.chat(String.join("\n", array)));
-                        saveIP(ip, proxy[1], false);
-                        notifyStaff(p, ip, String.join(", ", location), operation, status, proxy[1]);
-                    }
-                }
-            });
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        if (!plugin.getConfig().getBoolean("enable")) {
+            return;
         }
+
+        long start = System.nanoTime();
+
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            Player p = event.getPlayer();
+            String ip = p.getAddress().getHostString();
+            String playerAction;
+
+            if (ip.equals("127.0.0.1") || ip.startsWith("192.168.1.") || ip.startsWith("192.168.0.")) {
+                playerAction = plugin.getMessages().getString("messages.staffnotify.connected");
+                staff_notify(p, playerAction, ip, "localhost" ,"localhost", 0, start);
+                log_console(p, playerAction, ip, "localhost", "localhost", 0, start);
+                return;
+            }
+
+            String location = Location.get(ip);
+
+            if (p.hasPermission("antiproxy.bypass") || p.hasPermission("antiproxy.admin") || p.isOp()) {
+                playerAction = plugin.getMessages().getString("messages.staffnotify.connected");
+                staff_notify(p, playerAction, ip, "Staff IP", location, 0, start);
+                log_console(p, playerAction, ip, "Staff IP", location, 0, start);
+                return;
+            }
+
+            DatabaseHandler.GetInternetProtocol database_ip;
+            try {
+                database_ip = db.getIP(ip);
+            } catch (SQLException e) {
+                System.out.println(Util.chat("&cError while getting data from database!"));
+                e.printStackTrace();
+                return;
+            }
+
+            if (database_ip != null) {
+                boolean ip_status = database_ip.status;
+                String ip_type = database_ip.ip_type;
+                int score = database_ip.score;
+                if (ip_status) {
+                    playerAction = plugin.getMessages().getString("messages.staffnotify.connected");
+                    staff_notify(p, playerAction, ip, ip_type, location, score, start);
+                    log_console(p, playerAction, ip, ip_type, location, score, start);
+                } else {
+                    String reason = "";
+                    playerAction = plugin.getMessages().getString("messages.staffnotify.kicked");
+                    if (ip_type.equals("VPN/Proxy")) { reason = "messages.staffnotify.kickmessage"; }
+                    if (ip_type.equals("Blacklisted")) { reason = "messages.staffnotify.banmessage"; }
+                    playerKick(p, reason);
+                    staff_notify(p, playerAction, ip, ip_type, location, score, start);
+                    log_console(p, playerAction, ip, ip_type, location, score, start);
+                }
+            } else {
+                int score = Checker.get(ip);
+                if (score >= plugin.getConfig().getInt("score.kick.at")) {
+                    saveIP(ip, score, "VPN/Proxy", false);
+                    playerAction = plugin.getMessages().getString("messages.staffnotify.kicked");
+                    playerKick(p, "messages.staffnotify.kickmessage");
+                    staff_notify(p, playerAction, ip, "VPN/Proxy", location, score, start);
+                    log_console(p, playerAction, ip, "VPN/Proxy", location, score, start);
+                } else {
+                    saveIP(ip, score, "Player IP", true);
+                    playerAction = plugin.getMessages().getString("messages.staffnotify.connected");
+                    staff_notify(p, playerAction, ip, "Player IP",location, score, start);
+                    log_console(p, playerAction, ip, "Player IP", location, score, start);
+                }
+            }
+        });
     }
 
-    public void notifyStaff(Player p, String ip, String location, String operation, String status, String proxy_type) {
-        consoleLog(p, ip, location, operation, status, proxy_type);
-        List<String> list = plugin.getConfig().getStringList("messages.staffnotify.notify");
-        String[] array = list.toArray(new String[0]);
-        for (Player staff : Bukkit.getOnlinePlayers()) {
-            if (staff.hasPermission("antiproxy.admin") || staff.isOp()) {
-                if (plugin.getConfig().contains("staff." + staff.getName() + ".notify")) {
-                    if (plugin.getConfig().getBoolean("staff." + staff.getName() + ".notify")) {
-                        PlayerSession session = LoginSecurity.getSessionManager().getPlayerSession(staff);
-                        if (session.isLoggedIn()) {
-                            for (String msg: array) {
-                                if (!plugin.getConfig().getBoolean("check-location")) {
-                                    if (!msg.contains("%location%")) {
-                                        staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
-                                    }
-                                } else {
-                                    staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
-                                }
-                            }
-                        }
+    public void staff_notify(Player p, String playerAction, String ip, String proxy_type, String location, int score, long time) {
+        for (Player staff: Bukkit.getOnlinePlayers()) {
+            if (!staff.hasPermission("antiproxy.admin") || !staff.isOp()) return;
+            if (!(plugin.getConfig().contains("staff." + staff.getName() + ".notify"))) {
+                addStaff(staff);
+            }
+            if (!(plugin.getConfig().getBoolean("staff." + staff.getName() + ".notify"))) return;
+//            PlayerSession session = LoginSecurity.getSessionManager().getPlayerSession(staff);
+//            if (!(session.isLoggedIn())) return;
+            List<String> list = plugin.getMessages().getStringList("messages.staffnotify.notify");
+            String[] array = list.toArray(new String[0]);
+            for (String msg: array) {
+                if (!plugin.getConfig().getBoolean("location.check")) {
+                    if (!msg.contains("%location%")) {
+                        staff.sendMessage(Util.chat(Placeholders.get(msg, plugin, "player_connect", p.getDisplayName(), playerAction, ip, proxy_type, location, String.valueOf(score))));
                     }
                 } else {
-                    plugin.getConfig().set("staff." + staff.getName() + ".notify", true);
-                    plugin.saveConfig();
-                    plugin.reloadConfig();
-                    PlayerSession session = LoginSecurity.getSessionManager().getPlayerSession(staff);
-                    if (session.isLoggedIn()) {
-                        for (String msg: array) {
-                            if (!plugin.getConfig().getBoolean("check-location")) {
-                                if (!msg.contains("%location%")) {
-                                    staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
-                                }
-                            } else {
-                                staff.sendMessage(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
-                            }
-                        }
-                    }
+                    staff.sendMessage(Util.chat(Placeholders.get(msg, plugin, "player_connect", p.getDisplayName(), playerAction, ip, proxy_type, location, String.valueOf(score))));
                 }
+            }
+            if (plugin.getConfig().getBoolean("debug")) {
+                long elapsedTime = System.nanoTime() - time;
+                long milliseconds = elapsedTime / 1000000;
+                staff.sendMessage(Util.chat("&b[AntiProxy] &8[Debug] &7It took " + milliseconds + "ms to check player's IP."));
             }
         }
     }
 
-    public void consoleLog(Player p, String ip, String location, String operation, String status, String proxy_type) {
-        List<String> list = plugin.getConfig().getStringList("messages.staffnotify.console");
+    public void addStaff(Player p) {
+        plugin.getConfig().set("staff." + p.getName() + ".notify", true);
+    }
+
+    public void log_console(Player p, String playerAction, String ip, String proxy_type, String location, int score, long time) {
+        List<String> list = plugin.getMessages().getStringList("messages.staffnotify.console");
         String[] array = list.toArray(new String[0]);
         for (String msg: array) {
-            System.out.println(Util.chat(Placeholders.get(msg, ip, null, p.getDisplayName(), location, operation, status, proxy_type)));
+            System.out.println(Util.chat(Placeholders.get(msg, plugin, "player_connect", p.getDisplayName(), playerAction, ip, proxy_type, location, String.valueOf(score))));
+        }
+        if (plugin.getConfig().getBoolean("debug")) {
+            long elapsedTime = System.nanoTime() - time;
+            long milliseconds = elapsedTime / 1000000;
+            System.out.println(Util.chat("&8[Debug] &7It took " + milliseconds + "ms to check player's IP."));
         }
     }
 
-    public void saveIP(String ip, String proxy_type, Boolean status) {
-        if (!ip.equals("127.0.0.1")) {
-            plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
-                try {
-                    db.addIP(ip, proxy_type, status);
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
+    public void saveIP(String ip, int score, String ip_type, Boolean status) {
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            try {
+                db.addIP(ip, score, ip_type, status);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
-    public void kick(Player p, String reason) {
+    public void playerKick(Player p, String path) {
         Bukkit.getScheduler().runTask(plugin, new Runnable() {
             @Override
             public void run() {
-                p.kickPlayer(Util.chat(reason));
+                List<String> list = plugin.getMessages().getStringList(path);
+                String[] array = list.toArray(new String[0]);
+                for (String reason: array) {
+                    p.kickPlayer(Util.chat(reason));
+                }
             }
         });
     }

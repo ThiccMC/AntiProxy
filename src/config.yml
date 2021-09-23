@@ -1,133 +1,37 @@
+# Available location format placeholders:
+# %country%: Vietnam              # %city%: Hanoi
+# %countryCode%: VN               # %timezone%: Asia/Bangkok
+# %region%: HN                    # %isp%: VietNam Post and Telecom Corporation
+# %regionName%: Hanoi
+
+# proxycheck.io
+# vpnapi.io
+# funkemunky.cc
+# iphub.info
 enable: true
-check-location: true
-api-key:
-  proxycheck: 850828-440g01-30op02-7j935t
-# Message placeholders:
-# %prefix%: Get plugin's prefix
-# %version%: Get plugin version
-# %player%: Player's name
-# %plugin_status%: Get plugin status (Enabled or Disabled)
-# %player_notify%: Get player notification status (Enabled or Disabled)
-# %ip%: Player's IP
-# %location%: Player's location
-# %status%: Status of player's IP (Good, Bad)
-# %operation%: Player is kicked or connected
-# %proxy%: Based on player's IP, there will be some proxy types: Residential, Business, VPN, SOCKS,...
-
-
-messages:
-  prefix: "&b[AntiProxy]"
-  enabled: "&aEnabled"
-  disabled: "&cDisabled"
-  noperm: "&cYou don't have permission to execute this command!"
-  playeronly: "%prefix% &eThis command is only available for player!"
-  isdisable: "%prefix% &eThe plugin is currently disabled. Enabling the plugin by using &6/ap enable true &ein the Console!"
-  reloaded: "%prefix% &eReloaded config file!"
-  already:
-    pluginstatus: "%prefix% &eThe plugin is already %plugin_status%&e!"
-    notifystatus: "%prefix% &eYou have already %player_notify% &enotification from plugin!"
-    whitelisted: "%prefix% &eIP &6%ip% &eis already in whitelist!"
-    butwhitelist: "%prefix% &eIP &6%ip% &eis in whitelist! If you wish to blacklist this IP, use &6/ap whitelist remove &6%ip%&e."
-    blacklisted: "%prefix% &eIP &6%ip% &eis already in blacklist!"
-    butblacklist: "%prefix% &eIP &6%ip% &eis in blacklist! If you wish to whitelist this IP, use &6/ap blacklist remove &6%ip%&e."
-    banned: "%prefix% &eIP &6%ip% &eis already banned!"
-    unbanned: "%prefix% &eIP &6%ip% &eis already unbanned!"
-  newstatus:
-    plugin: "%prefix% &ePlugin is now %plugin_status%&e!"
-    notify: "%prefix% &eYou have %player_notify% &enotification from plugin!"
-  invalidusage: "%prefix% &eInvalid usage! Please check the command usage again."
-  confirm:
-    clearwhitelist:
-      - "%prefix% &eAre you sure you want to clear whitelist? Players will have to be IP checked again."
-      - "%prefix% &eType &6/ap whitelist clear confirm &eto confirm your decision."
-    clearblacklist:
-      - "%prefix% &eAre you sure you want to clear blacklist? Plugin will have to check Proxy/VPN IPs again."
-      - "%prefix% &eType &6/ap blacklist clear confirm &eto confirm your decision."
-  success:
-    whitelist:
-      add: "%prefix% &eAdded &6%ip% &eto whitelist."
-      remove: "%prefix% &eRemoved &6%ip% &efrom whitelist."
-      ban: "%prefix% &eBanned &6%ip%&e."
-      clear: "%prefix% &eCleared whitelist."
-      invalid: "%prefix% &eInvalid IP address. The IPv4 address should be this format: &6#.#.#.#"
-      notfound: "%prefix% &eCannot find &6%ip% &efor whitelist."
-      fail: "%prefix% &eSomething went wrong! Please try again later."
-    blacklist:
-      add: "%prefix% &eAdded &6%ip% &eto blacklist."
-      remove: "%prefix% &eRemoved &6%ip% &efrom blacklist."
-      ban: "%prefix% &eBanned &6%ip%&e."
-      clear: "%prefix% &eCleared blacklist."
-      invalid: "%prefix% &eInvalid IP address. The IPv4 address should be this format: &6#.#.#.#"
-      notfound: "%prefix% &eCannot find &6%ip% &efor blacklist."
-      fail: "%prefix% &eSomething went wrong! Please try again later."
-    apikey:
-      changed: "%prefix% &eSuccessfully changed ProxyCheck API Key!"
-  info:
-    - "&6&m---------------------------------------"
-    - "&bAntiProxy &eplugin. Version &6%version%"
-    - "&eType &6/ap help &efor a list of commands."
-    - "&ePlugin Status: %plugin_status%"
-    - "&6&m---------------------------------------"
-  help:
-    - "&6&m---------------------------------------"
-    - "&bAntiProxy &6 - Commands list"
-    - "&6/ap help&e: Print this help message."
-    - "&6/ap whitelist&e: Whitelist section."
-    - "&6/ap blacklist&e: Blacklist section."
-    - "&6/ap stats&e: Get statistics about the plugin."
-    - "&6/ap apikey&e: Change ProxyCheck.io API key."
-    - "&6/ap enable&e: Enable or disable the plugin."
-    - "&6/ap notify&e: Enable or disable notification from plugin."
-    - "&6/ap reload&e: Reload config file."
-    - "&6&m---------------------------------------"
-  whitelist:
-    - "&6&m---------------------------------------"
-    - "&bAntiProxy &6 - Whitelist"
-    - "&6/ap whitelist add&e: Add an IPv4 to whitelist."
-    - "&6/ap whitelist remove&e: Remove an IPv4 from whitelist."
-    - "&6/ap whitelist clear&e: Clear whitelist."
-    - "&6&m---------------------------------------"
-  blacklist:
-    - "&6&m---------------------------------------"
-    - "&bAntiProxy &6 - Blacklist"
-    - "&6/ap blacklist add&e: Add an IPv4 to blacklist."
-    - "&6/ap blacklist remove&e: Remove an IPv4 from blacklist."
-    - "&6/ap blacklist clear&e: Clear blacklist."
-    - "&6&m---------------------------------------"
-  stats:
-    - "&6&m---------------------------------------"
-    - "&bAntiProxy &6 - statistics"
-    - "&eA total of lol"
-    - "&6&m---------------------------------------"
-  staffnotify:
-    notify:
-      - "&6&m---------------------------------------"
-      - "&a%player% &econnected!"
-      - "&eIP: &6%ip%"
-      - "&eLocation: &6%location%"
-      - "&eStatus: %operation% - %status% (%proxy%)"
-      - "&6&m---------------------------------------"
-    console:
-      - "&6%player% &econnected! [ IP: &6%ip% &e- Location: &6%location% &e- Status: %operation% - %status% (%proxy%) &e]"
-    good: "&aGood"
-    bad: "&cBad"
-    connected: "&aConnected"
-    kicked: "&cKicked"
-    kickmessage:
-      - "&cUsing Proxy/VPN is not allowed!"
-      - "&r"
-      - "&cIf you think this is a mistake, consider join &ehttps://qtpc.tech/discord &cand contact a staff member."
-    banmessage:
-      - "&cYour IP has been blacklisted!"
-      - "&r"
-      - "&cIf you think this is a mistake, consider join &ehttps://qtpc.tech/discord &cand contact a staff member."
-  usage:
-    player:
-    - "%prefix% &eUsage: &6/ap player [ Player ]&e: Get an online player's info."
-    apikey:
-    - "%prefix% &eUsage: &6/ap apikey [ API key ]&e: Change ProxyCheck.io API key."
-    enable:
-    - "%prefix% &eUsage: &6/ap enable [ true | false ]&e: Enable or disable the plugin."
-    notify:
-      - "%prefix% &eYou have %player_notify% &enotification from plugin!"
-      - "%prefix% &eUsage: &6/ap notify [ true | false ]&e: Enable or disable notification from plugin."
+debug: false
+location:
+  check: true
+  format: "%city% - %regionName% - %countryCode%"
+score:
+  kick:
+    at: 75
+    color: "&c"
+  alert:
+    at: 40
+    color: "&6"
+  safe:
+    color: "&a"
+api:
+  proxycheck:
+    enable: true
+    key: none
+  vpnapi:
+    enable: true
+    key: none
+  funkemunky:
+    enable: true
+  iphub:
+    enable: true
+    key: none
+staff:

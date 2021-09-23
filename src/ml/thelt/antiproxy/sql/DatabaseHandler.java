@@ -29,7 +29,8 @@ public abstract class DatabaseHandler {
         PreparedStatement ps = c.prepareStatement(
                 "CREATE TABLE IF NOT EXISTS `" + table_name + "` ("
                         + "`ip` varchar(18) NOT NULL,"
-                        + "`proxy_type` varchar(36) NOT NULL,"
+                        + "`score` int(10) NOT NULL,"
+                        + "`ip_type` varchar(36) NOT NULL,"
                         + "`status` boolean NOT NULL,"
                         + "PRIMARY KEY (`ip`));"
         );
@@ -42,7 +43,7 @@ public abstract class DatabaseHandler {
         checkAsync();
 
         Connection c = this.getConnection();
-        PreparedStatement ps = c.prepareStatement("SELECT ip, proxy_type, status FROM "
+        PreparedStatement ps = c.prepareStatement("SELECT ip, score, ip_type, status FROM "
                 + table_name + " WHERE ip = ?"
         );
 
@@ -55,8 +56,9 @@ public abstract class DatabaseHandler {
         if (res.next()) {
             ret = new GetInternetProtocol(
                     res.getString(1),
-                    res.getString(2),
-                    res.getBoolean(3)
+                    res.getInt(2),
+                    res.getString(3),
+                    res.getBoolean(4)
             );
         }
 
@@ -64,15 +66,16 @@ public abstract class DatabaseHandler {
         return ret;
     }
 
-    public void addIP(String ip, String proxy_type, Boolean status) throws SQLException{
+    public void addIP(String ip, int score, String ip_type, Boolean status) throws SQLException{
         checkAsync();
 
         Connection c = this.getConnection();
-        PreparedStatement ps = c.prepareStatement("INSERT INTO " + table_name+ " (ip, proxy_type, status) VALUES (?,?,?)");
+        PreparedStatement ps = c.prepareStatement("INSERT INTO " + table_name+ " (ip, score, ip_type, status) VALUES (?,?,?,?)");
 
         ps.setString(1, ip);
-        ps.setString(2, proxy_type);
-        ps.setBoolean(3, status);
+        ps.setInt(2, score);
+        ps.setString(3, ip_type);
+        ps.setBoolean(4, status);
         ps.execute();
 
         this.closeConnection(c);
@@ -90,21 +93,19 @@ public abstract class DatabaseHandler {
         this.closeConnection(c);
     }
 
-    public void banIP(String ip, String proxy_type, Boolean status) throws SQLException {
+    public void clearList(String proxy_type) throws SQLException {
         checkAsync();
 
         Connection c = this.getConnection();
-        PreparedStatement ps = c.prepareStatement("UPDATE " + table_name + " SET proxy_type = ?, status = ? WHERE ip = ?");
+        PreparedStatement ps = c.prepareStatement("DELETE FROM " + table_name+ " WHERE ip_type = ?");
 
         ps.setString(1, proxy_type);
-        ps.setBoolean(2, status);
-        ps.setString(3, ip);
         ps.execute();
 
         this.closeConnection(c);
     }
 
-    public void clearList(Boolean status) throws SQLException {
+    public void clearData(Boolean status) throws SQLException {
         checkAsync();
 
         Connection c = this.getConnection();
@@ -124,12 +125,14 @@ public abstract class DatabaseHandler {
 
     public static class GetInternetProtocol {
         public final String ip;
-        public final String proxy_type;
+        public final int score;
+        public final String ip_type;
         public final boolean status;
 
-        GetInternetProtocol(String ip, String proxy_type, boolean status) {
+        GetInternetProtocol(String ip, int score, String ip_type, boolean status) {
             this.ip = ip;
-            this.proxy_type = proxy_type;
+            this.score = score;
+            this.ip_type = ip_type;
             this.status = status;
         }
     }

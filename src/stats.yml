@@ -1,0 +1,21 @@
+stats:
+  overall:
+    totalConnected: 0
+    totalGood: 0
+    totalBad: 0
+  hour:
+    connected: 0
+    good: 0
+    bad: 0
+  day:
+    connected: 0
+    good: 0
+    bad: 0
+  week:
+    connected: 0
+    good: 0
+    bad: 0
+  month:
+    connected: 0
+    good: 0
+    bad: 0
