@@ -1,6 +1,6 @@
 name: AntiProxy
 main: ml.thelt.antiproxy.Main
-version: 1.0-pre_Release_performance_test
+version: 1.0-pre_Release
 api-version: 1.17
 description: Prevent Players connecting to server with Proxies/VPN
 author: TheLT

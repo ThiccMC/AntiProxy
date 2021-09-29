@@ -35,7 +35,7 @@ public class AntiProxy implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String str, String[] args) {
-        if (!sender.hasPermission("antiproxy.admin") || !sender.isOp()) {
+        if (!sender.hasPermission("antiproxy.admin")) {
             sender.sendMessage(Util.chat(Placeholders.get(plugin.getMessages().getString("messages.noperm"), plugin)));
             return true;
         }

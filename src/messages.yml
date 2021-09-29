@@ -136,7 +136,7 @@ messages:
       - "&eScore: %scoreColor%%score%&6/100"
       - "%scoreColor%&m---------------------------------"
     console:
-      - "&6%player% &e%playerAction%! &e[IP: &6%ip% (%proxy_type%) &e- Location: &6%location% &e- Score: %scoreColor%%score% &e]"
+      - "&6%player% &e%playerAction%! &e[ IP: &6%ip% (%proxy_type%) &e- Location: &6%location% &e- Score: %scoreColor%%score% &e]"
     connected: "&aconnected"
     kicked: "&ckicked"
     kickmessage:

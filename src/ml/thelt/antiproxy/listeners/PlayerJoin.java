@@ -39,7 +39,18 @@ public class PlayerJoin implements Listener {
             String ip = p.getAddress().getHostString();
             String playerAction;
 
-            if (ip.equals("127.0.0.1") || ip.startsWith("192.168.1.") || ip.startsWith("192.168.0.")) {
+            /**
+             * staff_notify() and log_console() functions
+             * @param p : Event player (Player)
+             * @param playerAction : Action for player (String)
+             * @param ip : Player's IP (String)
+             * @param proxy_type : Player's IP type (String)
+             * @param location : Player's location (String)
+             * @param score : Proxy score (Integer)
+             * @param start: debug (time)
+            **/
+
+            if (ip.equals("127.0.0.1") || ip.startsWith("192.168.")) {
                 playerAction = plugin.getMessages().getString("messages.staffnotify.connected");
                 staff_notify(p, playerAction, ip, "localhost" ,"localhost", 0, start);
                 log_console(p, playerAction, ip, "localhost", "localhost", 0, start);
@@ -48,10 +59,17 @@ public class PlayerJoin implements Listener {
 
             String location = Location.get(ip);
 
-            if (p.hasPermission("antiproxy.bypass") || p.hasPermission("antiproxy.admin") || p.isOp()) {
+            if (p.hasPermission("antiproxy.admin")) {
                 playerAction = plugin.getMessages().getString("messages.staffnotify.connected");
                 staff_notify(p, playerAction, ip, "Staff IP", location, 0, start);
                 log_console(p, playerAction, ip, "Staff IP", location, 0, start);
+                return;
+            }
+
+            if (p.hasPermission("antiproxy.bypass")) {
+                playerAction = plugin.getMessages().getString("messages.staffnotify.connected");
+                staff_notify(p, playerAction, ip, "Bypass Permission", location, 0, start);
+                log_console(p, playerAction, ip, "Bypass Permission", location, 0, start);
                 return;
             }
 
@@ -100,35 +118,7 @@ public class PlayerJoin implements Listener {
     }
 
     public void staff_notify(Player p, String playerAction, String ip, String proxy_type, String location, int score, long time) {
-        for (Player staff: Bukkit.getOnlinePlayers()) {
-            if (!staff.hasPermission("antiproxy.admin") || !staff.isOp()) return;
-            if (!(plugin.getConfig().contains("staff." + staff.getName() + ".notify"))) {
-                addStaff(staff);
-            }
-            if (!(plugin.getConfig().getBoolean("staff." + staff.getName() + ".notify"))) return;
-//            PlayerSession session = LoginSecurity.getSessionManager().getPlayerSession(staff);
-//            if (!(session.isLoggedIn())) return;
-            List<String> list = plugin.getMessages().getStringList("messages.staffnotify.notify");
-            String[] array = list.toArray(new String[0]);
-            for (String msg: array) {
-                if (!plugin.getConfig().getBoolean("location.check")) {
-                    if (!msg.contains("%location%")) {
-                        staff.sendMessage(Util.chat(Placeholders.get(msg, plugin, "player_connect", p.getDisplayName(), playerAction, ip, proxy_type, location, String.valueOf(score))));
-                    }
-                } else {
-                    staff.sendMessage(Util.chat(Placeholders.get(msg, plugin, "player_connect", p.getDisplayName(), playerAction, ip, proxy_type, location, String.valueOf(score))));
-                }
-            }
-            if (plugin.getConfig().getBoolean("debug")) {
-                long elapsedTime = System.nanoTime() - time;
-                long milliseconds = elapsedTime / 1000000;
-                staff.sendMessage(Util.chat("&b[AntiProxy] &8[Debug] &7It took " + milliseconds + "ms to check player's IP."));
-            }
-        }
-    }
-
-    public void addStaff(Player p) {
-        plugin.getConfig().set("staff." + p.getName() + ".notify", true);
+        NotifyStaffPlayers.run(p, playerAction, ip, proxy_type, location, score, time, plugin);
     }
 
     public void log_console(Player p, String playerAction, String ip, String proxy_type, String location, int score, long time) {
