@@ -1,4 +1,5 @@
-# AntiProxy - Blocks Proxy and VPN players from your server
+# Project abandoned
+## AntiProxy - Blocks Proxy and VPN players from your server
 **Main Developer: TheLT**
 
 Prevent players from connecting to server with Proxy/VPN.
